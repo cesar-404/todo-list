@@ -1,15 +1,18 @@
 package com._4.todolist.models;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
 @Entity
 @Table(name = "tb_todo")
-@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Setter @Getter
 public class Todo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @NonNull
     private Long id;
 
     @Column(name = "name")
