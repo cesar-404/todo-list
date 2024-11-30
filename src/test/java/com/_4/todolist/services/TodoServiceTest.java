@@ -38,7 +38,7 @@ class TodoServiceTest {
     @Test
     @DisplayName("Should create a task and return a list of tasks.")
     void shouldCreateATaskAndReturnAListOfTasks() {
-        //Testando o DTO
+
         var todo = new Todo();
         BeanUtils.copyProperties(todoDto, todo);
         assertAll("Todo properties should match the DTO",
@@ -48,7 +48,6 @@ class TodoServiceTest {
                 () -> assertEquals(todoDto.priority(), todo.getPriority())
         );
 
-        //Testando o repositorio
         when(todoRepository.save(todo)).thenReturn(todo);
         var expectedTodo = todoRepository.save(todo);
         verify(todoRepository, times(1)).save(todo);
@@ -57,7 +56,6 @@ class TodoServiceTest {
         assertEquals(todoDto.done(), expectedTodo.isDone());
         assertEquals(todoDto.priority(), expectedTodo.getPriority());
 
-        //testando o metodo listAll para saber se esta retornando uma lista
         List<Todo> todoList = List.of(todo);
         when(todoRepository.findAll(any(Sort.class))).thenReturn(todoList);
 
