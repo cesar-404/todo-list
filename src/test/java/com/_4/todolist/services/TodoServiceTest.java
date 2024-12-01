@@ -81,7 +81,7 @@ class TodoServiceTest {
         List<Todo> expectedTodoList = List.of(todo);
         when(todoRepository.findAll(any(Sort.class))).thenReturn(expectedTodoList);
         List<Todo> result = todoService.listAllTasks();
-        assertNotNull(result);
+        assertInstanceOf(List.class, result, "Should return a list of all tasks");
     }
 
     @Test
@@ -115,5 +115,71 @@ class TodoServiceTest {
 
         assertNull(expectedTodo);
         verify(todoRepository, times(1)).findById(1L);
+    }
+
+    @Test
+    @DisplayName("Should update a task by id.")
+    void shouldUpdateATaskById() {
+        long id = 1L;
+        var todo = new Todo(id,"Test 1", "Test desc 1", true, 2);
+        BeanUtils.copyProperties(todoDto, todo);
+        when(todoRepository.findById(anyLong())).thenReturn(Optional.of(todo));
+
+        List<Todo> updatedTasks = todoService.updateTaskById(id, todoDto);
+
+        assertAll("Todo in result list should match the expected properties",
+                () -> assertEquals(todo.getName(), todoDto.name()),
+                () -> assertEquals(todo.getDescription(), todoDto.description()),
+                () -> assertEquals(todo.isDone(), todoDto.done()),
+                () -> assertEquals(todo.getPriority(), todoDto.priority())
+        );
+
+        verify(todoRepository, times(1)).save(todo);
+
+        assertInstanceOf(List.class, updatedTasks, "Should return a list of all tasks");
+    }
+
+    @Test
+    @DisplayName("Update task by id not found.")
+    void updateTaskByIdNotFound() {
+        when(todoRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        List<Todo> todoList = todoService.updateTaskById(anyLong(), todoDto);
+
+        verify(todoRepository, times(0)).save(any(Todo.class));
+        assertInstanceOf(List.class, todoList, "Should return a list of all tasks");
+    }
+
+    @Test
+    @DisplayName("Should delete a task by id.")
+    void shouldDeleteATaskById() {
+        long id = 1L;
+        var todo = new Todo(id,"Test", "Test desc", false, 1);
+
+        when(todoRepository.findById(id)).thenReturn(Optional.of(todo));
+
+        List<Todo> todoList = todoService.deleteTaskById(id);
+
+        verify(todoRepository, times(1)).delete(todo);
+        assertInstanceOf(List.class, todoList, "Should return a list of all tasks");
+    }
+
+    @Test
+    @DisplayName("Should delete a task by id not found.")
+    void shouldDeleteATaskByIdNotFound() {
+        when(todoRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        List<Todo> todoList = todoService.deleteTaskById(anyLong());
+
+        assertInstanceOf(List.class, todoList, "Should return a list of all tasks");
+        verify(todoRepository, times(0)).delete(any());
+    }
+
+    @Test
+    @DisplayName("Should delete all tasks")
+    void shouldDeleteAllTasks() {
+        todoService.deleteAllTasks();
+
+        verify(todoRepository, times(1)).deleteAll();
     }
 }

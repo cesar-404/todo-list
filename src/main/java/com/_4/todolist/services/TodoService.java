@@ -44,8 +44,7 @@ public class TodoService {
             todoRepository.save(todo.get());
             return listAllTasks();
         }
-        listAllTasks();
-        return null;
+        return listAllTasks();
     }
 
     public List<Todo> deleteTaskById(Long id) {
@@ -54,8 +53,7 @@ public class TodoService {
             todoRepository.delete(todo.get());
             return listAllTasks();
         }
-        listAllTasks();
-        return null;
+        return listAllTasks();
     }
 
     public void deleteAllTasks() {
