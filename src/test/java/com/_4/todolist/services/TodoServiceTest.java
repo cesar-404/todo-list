@@ -14,6 +14,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -38,7 +39,7 @@ class TodoServiceTest {
     @Test
     @DisplayName("Should create a task and return a list of tasks.")
     void shouldCreateATaskAndReturnAListOfTasks() {
-        //Testando o DTO
+
         var todo = new Todo();
         BeanUtils.copyProperties(todoDto, todo);
         assertAll("Todo properties should match the DTO",
@@ -48,16 +49,16 @@ class TodoServiceTest {
                 () -> assertEquals(todoDto.priority(), todo.getPriority())
         );
 
-        //Testando o repositorio
         when(todoRepository.save(todo)).thenReturn(todo);
         var expectedTodo = todoRepository.save(todo);
         verify(todoRepository, times(1)).save(todo);
-        assertEquals(todoDto.name(), expectedTodo.getName());
-        assertEquals(todoDto.description(), expectedTodo.getDescription());
-        assertEquals(todoDto.done(), expectedTodo.isDone());
-        assertEquals(todoDto.priority(), expectedTodo.getPriority());
+        assertAll("Todo in result list should match the expected properties",
+                () -> assertEquals(todo.getName(), expectedTodo.getName()),
+                () -> assertEquals(todo.getDescription(), expectedTodo.getDescription()),
+                () -> assertEquals(todo.isDone(), expectedTodo.isDone()),
+                () -> assertEquals(todo.getPriority(), expectedTodo.getPriority())
+        );
 
-        //testando o metodo listAll para saber se esta retornando uma lista
         List<Todo> todoList = List.of(todo);
         when(todoRepository.findAll(any(Sort.class))).thenReturn(todoList);
 
@@ -71,5 +72,48 @@ class TodoServiceTest {
                 () -> assertEquals(todo.isDone(), result.get(0).isDone()),
                 () -> assertEquals(todo.getPriority(), result.get(0).getPriority())
         );
+    }
+
+    @Test
+    @DisplayName("Should return a list of all tasks.")
+    void shouldReturnAListOfAllTasks() {
+        var todo = new Todo();
+        List<Todo> expectedTodoList = List.of(todo);
+        when(todoRepository.findAll(any(Sort.class))).thenReturn(expectedTodoList);
+        List<Todo> result = todoService.listAllTasks();
+        assertNotNull(result);
+    }
+
+    @Test
+    @DisplayName("Should return a task by id.")
+    void shouldReturnATaskById() {
+        long id = 1L;
+        var todo = new Todo(id,"Test", "Test desc", false, 1);
+
+        when(todoRepository.findById(id)).thenReturn(Optional.of(todo));
+
+        var expectedTodo = todoService.getTaskById(id);
+
+        assertNotNull(expectedTodo);
+        assertAll("Todo in result list should match the expected properties",
+                () -> assertEquals(todo.getId(), expectedTodo.getId()),
+                () -> assertEquals(todo.getName(), expectedTodo.getName()),
+                () -> assertEquals(todo.getDescription(), expectedTodo.getDescription()),
+                () -> assertEquals(todo.isDone(), expectedTodo.isDone()),
+                () -> assertEquals(todo.getPriority(), expectedTodo.getPriority())
+        );
+
+        verify(todoRepository, times(1)).findById(id);
+    }
+
+    @Test
+    @DisplayName("Get task by id not found.")
+    void getTaskByIdNotFound() {
+        when(todoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        var expectedTodo = todoService.getTaskById(1L);
+
+        assertNull(expectedTodo);
+        verify(todoRepository, times(1)).findById(1L);
     }
 }

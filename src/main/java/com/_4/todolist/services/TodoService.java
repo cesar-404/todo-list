@@ -34,11 +34,7 @@ public class TodoService {
 
     public Todo getTaskById(Long taskId) {
         var foundTask = todoRepository.findById(taskId);
-        if (foundTask.isPresent()) {
-            return foundTask.get();
-        }
-        listAllTasks();
-        return null;
+        return foundTask.orElse(null);
     }
 
     public List<Todo> updateTaskById(Long id, TodoDto todoDto) {
